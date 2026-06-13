@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1F2D24">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="apple-mobile-web-app-title" content="Shadow">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Shadow · Training Companion</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,800&family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#EDEFE4;
+  --card:#F7F8F0;
+  --ink:#1F2D24;
+  --ink-soft:#48584D;
+  --fawn:#C98A4B;
+  --fawn-deep:#A86A2F;
+  --green:#3E7C4F;
+  --green-bg:#DDEAD9;
+  --amber:#C0902F;
+  --amber-bg:#F2E6C8;
+  --red:#B3402F;
+  --red-bg:#F0D8D1;
+  --line:#D6D9C8;
+  --radius:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{font-size:16px}
+body{
+  font-family:"Atkinson Hyperlegible",system-ui,sans-serif;
+  background:var(--paper);
+  color:var(--ink);
+  min-height:100vh;
+  padding-bottom:calc(76px + env(safe-area-inset-bottom));
+  line-height:1.45;
+}
+h1,h2,h3,.disp{font-family:"Bricolage Grotesque","Atkinson Hyperlegible",sans-serif}
+header.app{
+  background:var(--ink);
+  color:var(--paper);
+  padding:calc(14px + env(safe-area-inset-top)) 18px 14px;
+  display:flex;align-items:baseline;justify-content:space-between;
+  position:sticky;top:0;z-index:30;
+}
+header.app h1{font-size:1.25rem;font-weight:800;letter-spacing:.01em}
+header.app h1 span{color:var(--fawn)}
+header.app .date{font-size:.8rem;opacity:.75}
+main{max-width:560px;margin:0 auto;padding:16px 14px 24px}
+.tab{display:none}
+.tab.active{display:block;animation:fade .18s ease}
+@keyframes fade{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+
+/* ---------- threshold dial (signature) ---------- */
+.dial{
+  background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:14px;margin-bottom:16px;
+}
+.dial .lbl{font-size:.72rem;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-soft);margin-bottom:10px}
+.dial .row{display:flex;gap:8px}
+.dial button{
+  flex:1;border:none;border-radius:10px;padding:12px 6px;font-family:inherit;
+  font-size:.85rem;font-weight:700;cursor:pointer;color:var(--ink);
+  border:2px solid transparent;transition:transform .08s ease;
+}
+.dial button:active{transform:scale(.96)}
+.dial button.g{background:var(--green-bg)} .dial button.a{background:var(--amber-bg)} .dial button.r{background:var(--red-bg)}
+.dial button.sel.g{border-color:var(--green)} .dial button.sel.a{border-color:var(--amber)} .dial button.sel.r{border-color:var(--red)}
+.dial .sub{display:block;font-weight:400;font-size:.7rem;color:var(--ink-soft);margin-top:2px}
+.dial .advice{margin-top:12px;border-radius:10px;padding:12px;font-size:.9rem;display:none}
+.dial .advice.show{display:block}
+.dial .advice.g{background:var(--green-bg);border-left:4px solid var(--green)}
+.dial .advice.a{background:var(--amber-bg);border-left:4px solid var(--amber)}
+.dial .advice.r{background:var(--red-bg);border-left:4px solid var(--red)}
+.dial .advice strong{display:block;margin-bottom:4px;font-family:"Bricolage Grotesque",sans-serif}
+
+/* ---------- cards & checklist ---------- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:16px;margin-bottom:14px}
+.card h2{font-size:1.05rem;font-weight:800;margin-bottom:4px}
+.card .hint{font-size:.8rem;color:var(--ink-soft);margin-bottom:12px}
+.check{display:flex;align-items:flex-start;gap:10px;padding:10px 4px;border-bottom:1px dashed var(--line);cursor:pointer}
+.check:last-child{border-bottom:none}
+.check input{display:none}
+.check .box{
+  width:22px;height:22px;border-radius:7px;border:2px solid var(--ink-soft);
+  flex:none;margin-top:1px;display:grid;place-items:center;font-size:.8rem;color:#fff;
+  transition:background .15s;
+}
+.check input:checked + .box{background:var(--green);border-color:var(--green)}
+.check input:checked + .box::after{content:"✓"}
+.check .txt{font-size:.92rem}
+.check .txt small{display:block;color:var(--ink-soft);font-size:.76rem}
+.check input:checked ~ .txt{opacity:.55;text-decoration:line-through}
+.meter{font-size:.8rem;color:var(--ink-soft);margin-top:10px}
+.warn{background:var(--red-bg);border-left:4px solid var(--red);border-radius:8px;padding:10px 12px;font-size:.85rem;margin-top:10px;display:none}
+.warn.show{display:block}
+.pill{display:inline-block;background:var(--ink);color:var(--paper);font-size:.7rem;border-radius:99px;padding:3px 10px;margin-right:6px;margin-bottom:6px}
+.pill.fawn{background:var(--fawn-deep)}
+
+/* hard session counter */
+.hard{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.hard .dots{display:flex;gap:6px}
+.hard .dot{width:16px;height:16px;border-radius:50%;border:2px solid var(--ink-soft)}
+.hard .dot.on{background:var(--fawn);border-color:var(--fawn-deep)}
+.hard button{
+  border:none;background:var(--ink);color:var(--paper);border-radius:9px;
+  padding:8px 14px;font-family:inherit;font-weight:700;font-size:.8rem;cursor:pointer;
+}
+.hard button.ghost{background:#fff;color:var(--ink-soft);border:1px solid var(--line)}
+.hard button.ghost:disabled{opacity:.4;cursor:default}
+
+/* ---------- accordions (games / signals) ---------- */
+.acc{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;background:var(--card);overflow:hidden}
+.acc summary{
+  list-style:none;cursor:pointer;padding:13px 14px;display:flex;align-items:center;gap:10px;
+  font-weight:700;font-size:.95rem;font-family:"Bricolage Grotesque",sans-serif;
+}
+.acc summary::-webkit-details-marker{display:none}
+.acc summary .tag{font-size:.65rem;font-weight:700;border-radius:99px;padding:2px 8px;text-transform:uppercase;letter-spacing:.07em;flex:none}
+.tag.found{background:var(--green-bg);color:var(--green)}
+.tag.trig{background:var(--amber-bg);color:var(--amber)}
+.tag.play{background:#E2E4F2;color:#4A5390}
+.tag.people{background:var(--red-bg);color:var(--red)}
+.acc summary::after{content:"+";margin-left:auto;font-size:1.2rem;color:var(--ink-soft)}
+.acc[open] summary::after{content:"–"}
+.acc .body{padding:0 14px 14px;font-size:.9rem}
+.acc .body p{margin-bottom:8px}
+.acc .body ol,.acc .body ul{padding-left:20px;margin-bottom:8px}
+.acc .body li{margin-bottom:5px}
+.acc .why{font-size:.8rem;background:var(--paper);border-radius:8px;padding:8px 10px;margin-bottom:8px;color:var(--ink-soft)}
+.acc .stop{font-size:.8rem;border-left:3px solid var(--red);padding:6px 10px;background:var(--red-bg);border-radius:0 8px 8px 0}
+
+/* ---------- signals ---------- */
+.sig{border-radius:12px;padding:14px;margin-bottom:12px}
+.sig.g{background:var(--green-bg)} .sig.a{background:var(--amber-bg)} .sig.r{background:var(--red-bg)}
+.sig h3{font-size:.95rem;margin-bottom:6px}
+.sig ul{padding-left:18px;font-size:.88rem}
+.sig li{margin-bottom:4px}
+.ladder{counter-reset:rung}
+.ladder li{
+  list-style:none;counter-increment:rung;position:relative;padding:8px 8px 8px 40px;
+  border-bottom:1px dashed var(--line);font-size:.88rem;
+}
+.ladder li::before{
+  content:counter(rung);position:absolute;left:6px;top:8px;width:24px;height:24px;
+  border-radius:50%;display:grid;place-items:center;font-weight:800;font-size:.75rem;
+  font-family:"Bricolage Grotesque",sans-serif;background:var(--green-bg);color:var(--green);
+}
+.ladder li.mid::before{background:var(--amber-bg);color:var(--amber)}
+.ladder li.hot::before{background:var(--red-bg);color:var(--red)}
+
+/* ---------- milestones ---------- */
+.mile{display:flex;gap:12px;padding:12px 0;border-bottom:1px dashed var(--line);cursor:pointer}
+.mile:last-child{border:none}
+.mile .when{flex:none;width:64px;font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:.8rem;color:var(--fawn-deep)}
+.mile .what{font-size:.88rem}
+.mile .what small{color:var(--ink-soft);display:block;font-size:.76rem}
+.mile input{display:none}
+.mile .box{width:20px;height:20px;border-radius:6px;border:2px solid var(--ink-soft);flex:none;display:grid;place-items:center;color:#fff;font-size:.7rem}
+.mile input:checked + .box{background:var(--green);border-color:var(--green)}
+.mile input:checked + .box::after{content:"✓"}
+
+/* ---------- log ---------- */
+.logform label{display:block;font-size:.78rem;font-weight:700;margin:10px 0 4px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft)}
+.logform input[type=text],.logform input[type=date],.logform input[type=time],.logform textarea,.logform select{
+  width:100%;border:1px solid var(--line);border-radius:9px;padding:10px;font-family:inherit;
+  font-size:.9rem;background:#fff;color:var(--ink);
+}
+.logform textarea{min-height:64px;resize:vertical}
+.seg{display:flex;gap:8px}
+.seg button{
+  flex:1;border:1px solid var(--line);background:#fff;border-radius:9px;padding:9px 4px;
+  font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;color:var(--ink);
+}
+.seg button.sel{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.savebtn{
+  width:100%;margin-top:14px;border:none;background:var(--fawn-deep);color:#fff;
+  font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:1rem;
+  border-radius:10px;padding:13px;cursor:pointer;
+}
+.entry{border-bottom:1px dashed var(--line);padding:10px 0;font-size:.86rem}
+.entry .d{font-weight:800;font-family:"Bricolage Grotesque",sans-serif;font-size:.8rem}
+.entry .meta{color:var(--ink-soft);font-size:.78rem;margin:2px 0}
+.entry .state{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:5px;vertical-align:baseline}
+.entry .state.g{background:var(--green)} .entry .state.a{background:var(--amber)} .entry .state.r{background:var(--red)}
+.delbtn{background:none;border:none;color:var(--red);font-size:.75rem;cursor:pointer;padding:2px 8px 2px 0;font-family:inherit}
+.editbtn{background:none;border:none;color:var(--fawn-deep);font-size:.75rem;font-weight:700;cursor:pointer;padding:2px 12px 2px 0;font-family:inherit}
+.cancelbtn{width:100%;margin-top:8px;border:1px solid var(--line);background:#fff;color:var(--ink-soft);font-family:inherit;font-weight:700;font-size:.85rem;border-radius:10px;padding:10px;cursor:pointer}
+.dh{font-family:"Bricolage Grotesque",sans-serif;font-weight:800;font-size:.78rem;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.08em;margin:14px 0 2px;padding-bottom:4px;border-bottom:2px solid var(--line)}
+.entry.editing{outline:2px solid var(--fawn);border-radius:8px;padding-left:8px;padding-right:8px}
+
+/* ---------- nav ---------- */
+nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:40;
+  background:var(--ink);display:flex;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+nav button{
+  flex:1;background:none;border:none;color:#8FA194;padding:10px 2px 8px;cursor:pointer;
+  font-family:"Bricolage Grotesque",sans-serif;font-size:.68rem;font-weight:600;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+}
+nav button .ico{font-size:1.15rem;line-height:1}
+nav button.on{color:var(--fawn)}
+.note{font-size:.78rem;color:var(--ink-soft);margin-top:8px}
+.tl{border-left:3px solid var(--fawn);padding:2px 0 14px 14px;margin-left:6px;position:relative}
+.tl::before{content:"";position:absolute;left:-8px;top:4px;width:13px;height:13px;border-radius:50%;background:var(--fawn);}
+.tl h3{font-size:.92rem}
+.tl p{font-size:.85rem;color:var(--ink-soft)}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="app">
+  <h1>Shadow <span>· field guide</span></h1>
+  <div class="date" id="todayDate"></div>
+</header>
+
+<main>
+
+<!-- ============ TODAY ============ -->
+<section class="tab active" id="tab-today">
+
+  <div class="dial">
+    <div class="lbl">Right now, Shadow is…</div>
+    <div class="row">
+      <button class="g" data-st="g">Green<span class="sub">loose · eating · curious</span></button>
+      <button class="a" data-st="a">Amber<span class="sub">stiff · lip licks · scanning</span></button>
+      <button class="r" data-st="r">Red<span class="sub">won't eat · frozen · lunging</span></button>
+    </div>
+    <div class="advice g" id="adv-g"><strong>He can learn right now.</strong>Keep doing what you're doing. This is the zone for LAT, Engage‑Disengage, play, and short training reps. End on a win, before he tips.</div>
+    <div class="advice a" id="adv-a"><strong>Add distance now — don't push.</strong>He's on the lower rungs of the stress ladder. Cheerfully move away from the trigger, scatter a "find it," let him sniff. If food works again, you're back in green. No new asks.</div>
+    <div class="advice r" id="adv-r"><strong>Stop training. Just get out calmly.</strong>Nothing is being learned here except fear. Create distance, go home or to the car, no scolding, no comfort-pressure. Tomorrow = decompression day: sniff walk + enrichment only, no trigger work for 48–72h.</div>
+  </div>
+
+  <div class="card">
+    <h2>Today's rhythm</h2>
+    <div class="hint">Resets each day. Order is flexible — the rest blocks are not optional.</div>
+    <div id="todayChecks"></div>
+    <div class="meter" id="todayMeter"></div>
+  </div>
+
+  <div class="card">
+    <h2>Hard sessions this week</h2>
+    <div class="hint">Deliberate trigger work (LAT / Engage‑Disengage / parallel walking setups). Max 4 per week, never two days in a row.</div>
+    <div class="hard">
+      <div class="dots" id="hardDots"></div>
+      <div style="display:flex;gap:8px">
+        <button id="hardUndo" class="ghost">Undo</button>
+        <button id="hardBtn">+ Log one</button>
+      </div>
+    </div>
+    <div class="warn" id="hardWarn">That's 4 this week — stop there. More exposure won't speed this up; recovery is where learning consolidates. Sniff walks, ball, enrichment, rest until Monday.</div>
+    <div class="note" id="hardLast"></div>
+  </div>
+
+  <div class="card">
+    <h2>Non‑negotiables</h2>
+    <span class="pill">No prong. Ever.</span>
+    <span class="pill">Front‑clip harness</span>
+    <span class="pill">Affection at home = unlimited</span>
+    <span class="pill fawn">Never punish a growl</span>
+    <span class="pill fawn">He can always retreat</span>
+    <span class="pill">12–16h rest daily</span>
+  </div>
+</section>
+
+<!-- ============ TRAIN ============ -->
+<section class="tab" id="tab-train">
+  <div class="card" style="margin-bottom:14px">
+    <h2>Games library</h2>
+    <div class="hint">Sessions of 5–15 min. Always end while he's still winning. If he stops taking food → you're done, not him.</div>
+  </div>
+
+  <details class="acc"><summary><span class="tag found">Foundation</span>Charge your marker</summary><div class="body">
+    <div class="why">The marker ("yes!" or a clicker) tells him the exact instant he got it right. Everything else is built on this.</div>
+    <ol><li>Quiet room. Say "yes!" → treat. No behavior needed.</li><li>Repeat ~20 times across 2–3 mini sessions.</li><li>Test: say "yes!" when he's looking away. Head whips around = charged.</li></ol>
+  </div></details>
+
+  <details class="acc"><summary><span class="tag found">Foundation</span>Hand touch ("touch")</summary><div class="body">
+    <div class="why">A portable redirect, and it teaches that hands coming toward him = good things. Later this transfers to the sitter.</div>
+    <ol><li>Palm out at nose height, slightly to the side.</li><li>He sniffs/bumps it → "yes!" → treat from the other hand.</li><li>Add the word "touch" once he's reliably bumping.</li><li>Move the hand around: higher, lower, a step away.</li></ol>
+  </div></details>
+
+  <details class="acc"><summary><span class="tag found">Foundation</span>Find it / scatter</summary><div class="body">
+    <div class="why">Sniffing actively calms the nervous system. This is also your emergency exit near triggers — toss AWAY from the scary thing and move.</div>
+    <ol><li>Say "find it!" and scatter 5–6 treats in grass.</li><li>Let him forage. That's it. That's the game.</li><li>Outside: use it the moment you spot a trigger early, to move him off and down-shift.</li></ol>
+  </div></details>
+
+  <details class="acc"><summary><span class="tag found">Foundation</span>Mat = off switch (Relaxation Protocol)</summary><div class="body">
+    <div class="why">Karen Overall's 15‑day protocol teaches a relaxed STATE, not just a position. A portable safe zone.</div>
+    <ol><li>Reward any interaction with the mat → then only lying down on it.</li><li>Day by day, do small things while he stays settled: count to 10, clap once, step away, jog in place, touch the door.</li><li>15–20 min, 1–2× daily. Don't advance until today's level is boring for him.</li><li>New location = restart at day 1. Expect a worse-before-better dip around days 3–7. Normal.</li></ol>
+  </div></details>
+
+  <details class="acc"><summary><span class="tag trig">Trigger work</span>Look At That (LAT)</summary><div class="body">
+    <div class="why">Turns "see a dog" into a game he plays WITH you instead of an emergency. The cornerstone.</div>
+    <ol><li>Find a distance where he notices the trigger but stays green (still eats).</li><li>The INSTANT he glances at it → "yes!" → treat as he turns back to you.</li><li>Repeat. Soon: sees trigger → immediately looks at you. That's the win.</li><li>Only close distance after 3–5 easy reps in a row. A few steps at a time.</li></ol>
+    <div class="stop">He stares and can't turn back, or won't eat → too close. Add distance, don't repeat the mistake.</div>
+  </div></details>
+
+  <details class="acc"><summary><span class="tag trig">Trigger work</span>Engage–Disengage</summary><div class="body">
+    <div class="why">Level 2 of LAT: he learns to look away from a trigger BY HIMSELF. Self-interruption is incompatible with lunging.</div>
+    <ol><li>Level 1 = LAT (mark the glance AT the trigger).</li><li>Level 2: after a glance, wait 1–5 sec. He looks away on his own → "yes!" → treat.</li><li>3–5 calm reps → take 1–5 steps closer. Any struggle → back up.</li></ol>
+  </div></details>
+
+  <details class="acc"><summary><span class="tag trig">Trigger work</span>1‑2‑3 walking game</summary><div class="body">
+    <div class="why">Pure predictability. A rhythm to walk past spooky things — trucks, people on the sidewalk.</div>
+    <ol><li>Walk and count "one… two… three" out loud; on "three" a treat appears at your side. Every time.</li><li>Drill it in easy places until "three" makes him snap into position.</li><li>Use it to move through tight spots before he can build a stare.</li></ol>
+  </div></details>
+
+  <details class="acc"><summary><span class="tag trig">Trigger work</span>BAT-style long-line setups</summary><div class="body">
+    <div class="why">Grisha Stewart's method: on a 15ft line, HE chooses to look, sniff, and walk away from a distant trigger. Choice rebuilds what the prong took away.</div>
+    <ol><li>Set up far from a stationary trigger (a calm dog behind a fence, a person sitting).</li><li>Follow him on a loose line. Let him observe and gather info.</li><li>When he disengages on his own — sniffs, turns, walks off — quietly follow. Moving away IS the reward.</li><li>Drift closer only as his body stays loose. 10–20 min max.</li></ol>
+  </div></details>
+
+  <details class="acc"><summary><span class="tag play">Ball & play</span>Fetch with an off switch</summary><div class="body">
+    <div class="why">His ball drive is the engine of this whole program. Rules turn arousal into focus.</div>
+    <ol><li>Hold the ball. Wait for a sit (don't cue it). Sit happens → "yes!" → throw.</li><li>He returns → "drop" → the INSTANT he drops, next throw. Dropping restarts the game.</li><li>3–4 throws, then a 30‑sec sniff break ("find it"), then more. Teaches arousal to come DOWN, not just up.</li></ol>
+  </div></details>
+
+  <details class="acc"><summary><span class="tag play">Ball & play</span>Tug with rules</summary><div class="body">
+    <ol><li>Ask for a sit → "get it!" → tug enthusiastically, low and sideways.</li><li>Let him WIN often. Winning builds confidence; you are not "showing dominance."</li><li>"Out" → go still → he releases → "yes!" → game instantly restarts. The fastest way to teach "out" is that out = more tug.</li></ol>
+  </div></details>
+
+  <details class="acc"><summary><span class="tag play">Ball & play</span>Flirt pole (2–3×/week)</summary><div class="body">
+    <ol><li>Lure on the ground in wide arcs — never helicoptering at his head height.</li><li>Sit/wait → "get it!" → chase → let him catch within a few passes → brief tug → "drop" → reset.</li><li>5–8 minutes on grass, then a sniffy cool-down. End calm.</li></ol>
+  </div></details>
+
+  <details class="acc"><summary><span class="tag play">Ball & play</span>Ball-as-search (nosework)</summary><div class="body">
+    <div class="why">Searching with his nose = independent success = confidence. The ball is allowed to be the target.</div>
+    <ol><li>Have someone hold him (or use a wait). Hide the ball in easy grass while he watches.</li><li>"Search!" → he finds it → party + a game of tug/fetch as the jackpot.</li><li>Make hides progressively blind and harder. 10 min, indoors on rainy days too.</li></ol>
+  </div></details>
+
+  <details class="acc"><summary><span class="tag found">Confidence</span>Middle (safe station)</summary><div class="body">
+    <div class="why">A place to BE when the world gets close: tucked between your legs, facing out, anchored to you.</div>
+    <ol><li>Lure him between your legs from behind; "yes!" + treat while he's there.</li><li>Name it "middle." Feed several treats for staying.</li><li>Practice on walks when nothing's happening, so it's available when something is.</li></ol>
+  </div></details>
+
+  <details class="acc"><summary><span class="tag found">Confidence</span>Parkour-lite (novel stuff)</summary><div class="body">
+    <div class="why">Paws on a curb, through a gap, around a pole — chosen freely. Novelty he controls becomes novelty he likes.</div>
+    <ol><li>"Two feet on" a low ledge/log → mark, treat, HIS choice to step up. Never lift or lure-pressure him onto things.</li><li>Add: under a bench, through two trash cans, around a tree.</li><li>Jump-downs no higher than his shoulder. Check every obstacle is stable first.</li></ol>
+  </div></details>
+
+  <details class="acc"><summary><span class="tag found">Confidence</span>Muzzle = peanut butter party</summary><div class="body">
+    <div class="why">Undo the old muzzle damage and build safety infrastructure for vets and sitters. A basket muzzle, conditioned right, becomes a happy cue.</div>
+    <ol><li>Weeks 1–2: muzzle appears → treats rain → muzzle disappears. Then treats INSIDE it; he volunteers his nose in. Never push.</li><li>Week 3: clip it for 1 second → unclip → jackpot. Build seconds slowly.</li><li>Week 4+: peanut butter smeared inside, short wears during play and walks. Off before he fusses.</li></ol>
+    <div class="stop">Any tail tuck or backing away → you went too fast. Drop back two steps. The muzzle must never again appear while he's already stressed.</div>
+  </div></details>
+
+  <details class="acc"><summary><span class="tag people">People</span>Introducing new people</summary><div class="body">
+    <div class="why">Strangers don't greet him. They make good things happen from a distance, and HE decides everything.</div>
+    <ol><li>Brief the person first: no eye contact, no reaching, no talking to him, side-on body.</li><li>Person tosses treats AWAY from themselves (or you feed while they're visible).</li><li>If he chooses to sniff them, they stay passive. No petting on day one. Ever, if he says no.</li><li>Consent test later: chest scratch 3 sec → stop → does he ask for more? His call.</li><li>Many short visits beat one long one. Person leaving = treats stop (people predict good things).</li></ol>
+    <div class="stop">Freeze + stare at a person = too close, too soon. Cheerful "find it" away. Never let anyone insist "dogs love me."</div>
+  </div></details>
+
+  <details class="acc"><summary><span class="tag people">Dogs</span>Introducing dogs (neutrality, not friendship)</summary><div class="body">
+    <div class="why">Goal: a dog who can SEE dogs and shrug. Parallel walking with one calm, stable dog — never dog parks, never nose-to-nose meets.</div>
+    <ol><li>Recruit ONE rock-solid, indifferent adult dog (a friend's calm dog, or ask a force-free trainer for a "decoy" dog).</li><li>Walk same direction, opposite sides of a field. Far enough that Shadow stays green.</li><li>Over many sessions, drift closer. Both dogs sniffing ground and loose = good.</li><li>Maybe, months in: a brief 3‑second sniff and move on. Maybe not. Both outcomes are success.</li></ol>
+    <div class="stop">Stiff, tail high or tucked, hard stare in EITHER dog → widen the gap. One bad fight now can cost a year.</div>
+  </div></details>
+</section>
+
+<!-- ============ SIGNALS ============ -->
+<section class="tab" id="tab-signals">
+  <div class="card">
+    <h2>Read him, head to tail</h2>
+    <div class="hint">His body answers before his behavior does. Trust the tail and the food test over everything.</div>
+  </div>
+
+  <div class="sig g"><h3>🟢 Green — he can learn</h3><ul>
+    <li>Loose, curvy body · weight even</li>
+    <li>Tail neutral or easy wag</li>
+    <li>Soft blinking eyes, relaxed open mouth</li>
+    <li>Takes food, plays, sniffs the ground by choice</li>
+    <li>Glances at things, then moves on</li>
+  </ul></div>
+
+  <div class="sig a"><h3>🟡 Amber — lower rungs, add distance</h3><ul>
+    <li>Lip licking (no food), yawning (not sleepy)</li>
+    <li>Tail half-tucked · body slowing, stiffening</li>
+    <li>Scanning, ears pinning, head turns away</li>
+    <li>Sudden "fake" ground sniffing, shake-offs</li>
+    <li>Takes food roughly / slower</li>
+  </ul></div>
+
+  <div class="sig r"><h3>🔴 Red — over threshold, exit now</h3><ul>
+    <li>Refuses food he'd normally take ← the most reliable tell</li>
+    <li>Freeze, hard stare, closed tight mouth</li>
+    <li>Full tail tuck, crouch, whale eye</li>
+    <li>Barking, lunging — or eerie stillness (shutdown)</li>
+  </ul></div>
+
+  <div class="card">
+    <h2>The ladder he climbs</h2>
+    <div class="hint">Kendal Shepherd's ladder of escalation. Interrupt low, and he never needs the top. Punishing rung 8 deletes the warning, not the bite.</div>
+    <ol class="ladder">
+      <li>Yawning, blinking, nose licking</li>
+      <li>Turning head away</li>
+      <li class="mid">Turning body away, pawing</li>
+      <li class="mid">Creeping, ears back</li>
+      <li class="mid">Standing crouched, tail tucked</li>
+      <li class="hot">Lying down, leg up</li>
+      <li class="hot">Stiffening, staring</li>
+      <li class="hot">Growling</li>
+      <li class="hot">Snapping</li>
+      <li class="hot">Biting</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h2>Real progress vs. shutting down</h2>
+    <div class="hint">You learned this the hard way with the old trainer. "Quiet" is not the metric — loose is.</div>
+    <div style="font-size:.88rem">
+      <p style="margin-bottom:8px"><strong style="color:var(--green)">Improving:</strong> body gets looser over weeks · tail comes UP · eats in more places · recovers from startles in seconds · checks in with you voluntarily · WANTS to get out of the car · shake-offs after stress · still plays.</p>
+      <p><strong style="color:var(--red)">Suppressing:</strong> still but stiff · "obedient but flat" · tolerates touch with tucked tail · stops trying rather than starts enjoying · avoids places/equipment · stress poop after sessions · won't eat, won't play.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Your half of the leash</h2>
+    <div style="font-size:.88rem">
+      <p style="margin-bottom:6px">Your stress is measurably contagious — long-term cortisol syncs between dogs and owners. So: loose leash, slow exhale, light voice, keep walking. Don't tighten up when you spot a trigger before he does; he reads your hands.</p>
+      <p>Comforting a scared dog does not reward fear. Fear is an emotion, not a behavior. Be his safe base — that's not babying, that's the mechanism.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ PLAN ============ -->
+<section class="tab" id="tab-plan">
+  <div class="card">
+    <h2>The honest map</h2>
+    <div class="hint">Non-linear. Adolescence ends ~2.5–3 yrs. Setbacks are weather, not verdicts.</div>
+    <div class="tl"><h3>Month 1</h3><p>Prong gone for good. Marker charged, touch/mat/find-it solid at home, muzzle conditioning started. You can call his color (G/A/R) at a glance. Fewer blowups because YOU manage distance better.</p></div>
+    <div class="tl"><h3>Month 3</h3><p>LAT works at distance. Eats outside in more places. Threshold distances shrinking. First "sees trigger → looks at you" moments. Starts looking to you when unsure.</p></div>
+    <div class="tl"><h3>Month 6</h3><p>Noticeably calmer walks. Parallel walks with one stable dog. One trusted new person accepted at home. Begin the sitter ladder below.</p></div>
+    <div class="tl"><h3>Year 1</h3><p>Mostly neutral to everyday triggers at workable distance. Safe handling by his conditioned caregiver. Possibly first overnight trials. Still selective — that's fine.</p></div>
+    <div class="tl"><h3>Year 2</h3><p>Mature, stable adult. Calm neutrality + selective sociability is the realistic ceiling — and it is a complete success.</p></div>
+  </div>
+
+  <div class="card">
+    <h2>Travel-care ladder</h2>
+    <div class="hint">The real goal behind "daycare": someone can safely care for him while you travel. Group daycare is the wrong tool for him — this ladder is the right one. Tap to check off.</div>
+    <div id="mileList"></div>
+  </div>
+
+  <div class="card">
+    <h2>About daycare — the straight answer</h2>
+    <div style="font-size:.88rem">
+      <p style="margin-bottom:8px">Group-play daycare would very likely fail him today and could set him back badly — fearful adolescent Malinois are exactly the dogs these environments hurt. A bite there also creates a legal bite history.</p>
+      <p style="margin-bottom:8px"><strong>What works instead:</strong> an in-home sitter he knows well (best), solo boarding with no group play, day boarding with individual walks, a Fear Free–certified sitter/facility, or boarding with a force-free trainer.</p>
+      <p>Condition the caregiver months before the trip, do a paid local overnight trial first, hand over a written trigger sheet, and have his muzzle conditioning done as insurance. That's how he gets safely cared for while you fly.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>When to call in the pros</h2>
+    <div style="font-size:.88rem">
+      <p style="margin-bottom:6px"><strong>Veterinary behaviorist (DACVB)</strong> — book one regardless; his fear has genetic/early roots and meds may lower the floor so learning can happen. UC Davis behavior telehealth (CA residents): 530‑752‑1393. Dr. Karen Sueda (West LA) covers San Bernardino County.</p>
+      <p style="margin-bottom:6px"><strong>Force-free coach</strong> — CPDT‑KA / CDBC / KPA‑CTP via the CCPDT or IAABC directories. They coach YOU; the leash stays in your hand.</p>
+      <p><strong>Escalate sooner if:</strong> ~3 months of consistent work with little change · he can rarely get green outdoors · any bite · fear spreading to new things.</p>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Bookshelf</h2>
+    <div style="font-size:.85rem">
+      <p style="margin-bottom:6px"><strong>Start here:</strong> <em>Control Unleashed: Reactive to Relaxed</em> (McDevitt) · <em>The Cautious Canine</em> (McConnell) · <em>Doggie Language</em> (Lili Chin).</p>
+      <p style="margin-bottom:6px"><strong>Then:</strong> <em>BAT 2.0</em> (Stewart) · <em>Click to Calm</em> (Parsons) · <em>Canine Enrichment for the Real World</em> (Bender & Strong).</p>
+      <p><strong>Online:</strong> Fenzi Dog Sports Academy (Amy Cook's "Bogeyman" class) · careforreactivedogs.com (free) · The Muzzle Up Project · Fear Free directory for sitters.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ============ LOG ============ -->
+<section class="tab" id="tab-log">
+  <div class="card logform">
+    <h2 id="logFormTitle">Log a session</h2>
+    <div class="hint">Log each walk, play, or training session right after it happens. You can log as many as you like per day, back-fill past days using the date field, and edit any entry later.</div>
+    <label>Date &amp; time</label>
+    <div style="display:flex;gap:8px">
+      <input type="date" id="logDate" style="flex:1">
+      <input type="time" id="logTime" style="flex:1">
+    </div>
+    <label>What was it?</label>
+    <div class="seg" id="segAct">
+      <button data-v="walk">🚶 Walk</button><button data-v="play">🎾 Play</button><button data-v="train">🧠 Training</button><button data-v="other">Other</button>
+    </div>
+    <label>Where?</label>
+    <input type="text" id="logLoc" placeholder="e.g. ball park, neighborhood loop, home">
+    <label>How was he?</label>
+    <div class="seg" id="segState">
+      <button data-v="g">🟢 Green</button><button data-v="a">🟡 Amber</button><button data-v="r">🔴 Red</button>
+    </div>
+    <label>Took food during it?</label>
+    <div class="seg" id="segFood">
+      <button data-v="yes">Yes</button><button data-v="some">Sometimes</button><button data-v="no">No</button>
+    </div>
+    <label>Stress poop after?</label>
+    <div class="seg" id="segPoop">
+      <button data-v="no">No</button><button data-v="yes">Yes</button>
+    </div>
+    <label>Triggers (what, and roughly how far)</label>
+    <input type="text" id="logTrig" placeholder="e.g. neighbor at the corner ~5m, garbage truck">
+    <label>Wins, recovery time & notes</label>
+    <textarea id="logNotes" placeholder="e.g. red spike at jogger, recovered in ~20 sec, ate after. Tail up most of the walk."></textarea>
+    <button class="savebtn" id="saveLog">Save session</button>
+    <button class="cancelbtn" id="cancelEdit" style="display:none">Cancel editing</button>
+  </div>
+
+  <div class="card">
+    <h2>History</h2>
+    <div class="hint" id="streakLine">No sessions yet — the next walk is day one.</div>
+    <div id="entries"></div>
+  </div>
+</section>
+
+</main>
+
+<nav>
+  <button data-tab="today" class="on"><span class="ico">☀️</span>Today</button>
+  <button data-tab="train"><span class="ico">🎾</span>Train</button>
+  <button data-tab="signals"><span class="ico">👁️</span>Signals</button>
+  <button data-tab="plan"><span class="ico">🗺️</span>Plan</button>
+  <button data-tab="log"><span class="ico">📓</span>Log</button>
+</nav>
+
+<script>
+/* ---------------- storage layer: localStorage (persists on a real domain) ---------------- */
+const mem = {};
+const KEY = 'shadow-app-v1';
+async function loadState(){
+  try{
+    const v = localStorage.getItem(KEY);
+    if(v) return JSON.parse(v);
+  }catch(e){/* localStorage unavailable; fall back to memory */}
+  return mem[KEY] ? JSON.parse(mem[KEY]) : null;
+}
+let saveTimer=null;
+function saveState(){
+  const s = JSON.stringify(state);
+  mem[KEY]=s;
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(()=>{
+    try{ localStorage.setItem(KEY,s); }catch(e){console.error('storage save failed',e);}
+  },300);
+}
+
+/* ---------------- state ---------------- */
+const todayKey = ()=> new Date().toISOString().slice(0,10);
+let state = {
+  checks:{},        // {date:{id:true}}
+  hard:[],          // [dates]
+  miles:{},         // {id:true}
+  logs:[]           // [{d,state,food,poop,trig,notes}]
+};
+
+const CHECKS = [
+ ['sniff1','Morning decompression sniff walk','30–45 min, long line, quiet route, he picks the smells'],
+ ['ball','Ball / engagement session','15–20 min at one of his good parks — rules + sniff breaks'],
+ ['train1','Training block 1','10 min: touch, mat, find-it, or muzzle game — easy wins at home'],
+ ['rest','Protected midday rest','2–3+ hrs genuinely undisturbed. This is where learning sticks'],
+ ['enrich','Enrichment fed','Snuffle mat / Kong / lick mat / chew — part of meals through the nose'],
+ ['train2','Training block 2 (optional)','10–15 min. Threshold work ONLY if today has been low-stress'],
+ ['sniff2','Evening calm sniff walk','20–30 min, wind-down pace'],
+ ['calm','Caught him being calm ×3','Quiet treat drops when he settles on his own'],
+];
+
+const MILES = [
+ ['m1','M1 · Sitter accepted at home','Takes tossed treats with the chosen person present, person ignoring him'],
+ ['m2','M2 · Sitter can walk & feed him','With you right there'],
+ ['m3','M3 · Muzzle = party','Fully conditioned basket muzzle, worn happily during play'],
+ ['m4','M4 · Solo time','Sitter handles him with you out of the house — minutes, then hours'],
+ ['m5','M5 · First overnight','You sleep elsewhere in town. Video check-ins'],
+ ['m6','M6 · Multi-day dress rehearsal','Full trial run before any flight + written trigger handoff sheet'],
+];
+
+/* ---------------- render ---------------- */
+function fmtDate(){
+  return new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+}
+function renderChecks(){
+  const t=todayKey(); const done=state.checks[t]||{};
+  const el=document.getElementById('todayChecks');
+  el.innerHTML='';
+  CHECKS.forEach(([id,title,sub])=>{
+    const l=document.createElement('label');l.className='check';
+    l.innerHTML=`<input type="checkbox" ${done[id]?'checked':''}><span class="box"></span><span class="txt">${title}<small>${sub}</small></span>`;
+    l.querySelector('input').addEventListener('change',e=>{
+      state.checks[t]=state.checks[t]||{};
+      state.checks[t][id]=e.target.checked;
+      saveState();renderMeter();
+    });
+    el.appendChild(l);
+  });
+  renderMeter();
+}
+function renderMeter(){
+  const t=todayKey();const done=state.checks[t]||{};
+  const n=Object.values(done).filter(Boolean).length;
+  document.getElementById('todayMeter').textContent =
+    n===CHECKS.length ? '✅ Full day done. He earned his sofa.' : `${n} of ${CHECKS.length} done`;
+}
+function weekDates(){
+  const now=new Date();const day=(now.getDay()+6)%7; // monday=0
+  const mon=new Date(now);mon.setDate(now.getDate()-day);mon.setHours(0,0,0,0);
+  return state.hard.filter(d=>new Date(d)>=mon);
+}
+function renderHard(){
+  const wk=weekDates();
+  const dots=document.getElementById('hardDots');dots.innerHTML='';
+  for(let i=0;i<4;i++){const d=document.createElement('div');d.className='dot'+(i<wk.length?' on':'');dots.appendChild(d);}
+  document.getElementById('hardWarn').classList.toggle('show',wk.length>=4);
+  const last=state.hard[state.hard.length-1];
+  const lastEl=document.getElementById('hardLast');
+  if(last===todayKey()){lastEl.textContent='Logged today → tomorrow is a decompression day. No trigger work.';}
+  else if(last){const y=new Date(Date.now()-864e5).toISOString().slice(0,10);
+    lastEl.textContent = last===y ? 'One yesterday → today should stay easy.' : 'Last hard session: '+last;}
+  else lastEl.textContent='';
+  document.getElementById('hardUndo').disabled = state.hard.length===0;
+}
+document.getElementById('hardBtn').addEventListener('click',()=>{
+  const t=todayKey();
+  if(state.hard[state.hard.length-1]===t){alert('Already logged today — one deliberate trigger session per day is the ceiling.');return;}
+  const y=new Date(Date.now()-864e5).toISOString().slice(0,10);
+  if(state.hard[state.hard.length-1]===y && !confirm('You did one yesterday. Back-to-back hard days stack stress — log anyway?'))return;
+  state.hard.push(t);saveState();renderHard();
+});
+document.getElementById('hardUndo').addEventListener('click',()=>{
+  if(state.hard.length===0)return;
+  const last=state.hard[state.hard.length-1];
+  if(!confirm('Remove the most recent hard session'+(last?' ('+last+')':'')+'?'))return;
+  state.hard.pop();saveState();renderHard();
+});
+
+function renderMiles(){
+  const el=document.getElementById('mileList');el.innerHTML='';
+  MILES.forEach(([id,title,sub])=>{
+    const l=document.createElement('label');l.className='mile';
+    l.innerHTML=`<input type="checkbox" ${state.miles[id]?'checked':''}><span class="box"></span><span class="what"><strong>${title}</strong><small>${sub}</small></span>`;
+    l.querySelector('input').addEventListener('change',e=>{state.miles[id]=e.target.checked;saveState();});
+    el.appendChild(l);
+  });
+}
+
+/* ---------------- threshold dial ---------------- */
+document.querySelectorAll('.dial .row button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.dial .row button').forEach(x=>x.classList.remove('sel'));
+    b.classList.add('sel');
+    document.querySelectorAll('.dial .advice').forEach(a=>a.classList.remove('show'));
+    document.getElementById('adv-'+b.dataset.st).classList.add('show');
+  });
+});
+
+/* ---------------- log ---------------- */
+function seg(id){
+  const el=document.getElementById(id);
+  el.addEventListener('click',e=>{
+    if(e.target.tagName!=='BUTTON')return;
+    el.querySelectorAll('button').forEach(b=>b.classList.remove('sel'));
+    e.target.classList.add('sel');
+  });
+}
+['segAct','segState','segFood','segPoop'].forEach(seg);
+function segVal(id){const s=document.querySelector('#'+id+' .sel');return s?s.dataset.v:null;}
+function setSeg(id,val){
+  document.querySelectorAll('#'+id+' button').forEach(b=>b.classList.toggle('sel',b.dataset.v===val));
+}
+let editId=null;
+function nowTime24(){const d=new Date();return String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0');}
+function to12h(t24){ // "15:45" -> "3:45 PM"
+  if(!t24)return '';
+  const [h,m]=t24.split(':').map(Number);
+  const ap=h>=12?'PM':'AM';const h12=((h+11)%12)+1;
+  return h12+':'+String(m).padStart(2,'0')+' '+ap;
+}
+function legacyTo24(disp){ // "3:45 PM" -> "15:45" (for entries saved before the time field)
+  if(!disp)return '';
+  const m=disp.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if(!m)return '';
+  let h=+m[1]%12; if(/pm/i.test(m[3]))h+=12;
+  return String(h).padStart(2,'0')+':'+m[2];
+}
+function clearForm(){
+  editId=null;
+  const t=todayKey();
+  const dEl=document.getElementById('logDate');
+  dEl.max=t;dEl.value=t;
+  document.getElementById('logTime').value=nowTime24();
+  document.getElementById('logLoc').value='';
+  document.getElementById('logTrig').value='';
+  document.getElementById('logNotes').value='';
+  document.querySelectorAll('.logform .sel').forEach(b=>b.classList.remove('sel'));
+  document.getElementById('saveLog').textContent='Save session';
+  document.getElementById('logFormTitle').textContent='Log a session';
+  document.getElementById('cancelEdit').style.display='none';
+}
+document.getElementById('cancelEdit').addEventListener('click',()=>{clearForm();renderLogs();});
+
+document.getElementById('saveLog').addEventListener('click',()=>{
+  const st=segVal('segState');
+  if(!st){alert('Pick his color for this session first.');return;}
+  const dval=document.getElementById('logDate').value||todayKey();
+  const tval=document.getElementById('logTime').value; // 24h or ''
+  if(dval>todayKey()){alert("That date is in the future — pick today or earlier.");return;}
+  if(dval===todayKey() && tval && tval>nowTime24()){
+    if(!confirm("That time is later today (hasn't happened yet). Save anyway?"))return;
+  }
+  if(editId){
+    const l=state.logs.find(x=>x.id===editId);
+    if(l){
+      l.d=dval;l.t24=tval||'';l.t=to12h(tval);
+      l.act=segVal('segAct');l.state=st;l.food=segVal('segFood');l.poop=segVal('segPoop');
+      l.loc=document.getElementById('logLoc').value.trim();
+      l.trig=document.getElementById('logTrig').value.trim();
+      l.notes=document.getElementById('logNotes').value.trim();
+    }
+  }else{
+    const t24 = tval || nowTime24();
+    state.logs.push({
+      id:Date.now(),
+      d:dval, t24:t24, t:to12h(t24),
+      act:segVal('segAct'),state:st,food:segVal('segFood'),poop:segVal('segPoop'),
+      loc:document.getElementById('logLoc').value.trim(),
+      trig:document.getElementById('logTrig').value.trim(),
+      notes:document.getElementById('logNotes').value.trim()
+    });
+  }
+  sortLogs();
+  saveState();clearForm();renderLogs();
+});
+function sortLogs(){
+  // newest day first; within a day, latest time first; fall back to id
+  state.logs.sort((a,b)=>{
+    if(a.d!==b.d)return a.d<b.d?1:-1;
+    const ta=a.t24||'', tb=b.t24||'';
+    if(ta!==tb)return ta<tb?1:-1;
+    return b.id-a.id;
+  });
+}
+
+function renderLogs(){
+  const el=document.getElementById('entries');el.innerHTML='';
+  const map={g:'Green',a:'Amber',r:'Red'};
+  const actMap={walk:'🚶 Walk',play:'🎾 Play',train:'🧠 Training',other:'Session'};
+  let lastD='';
+  state.logs.slice(0,80).forEach(l=>{
+    if(l.d!==lastD){
+      const h=document.createElement('div');h.className='dh';
+      h.textContent = l.d===todayKey() ? 'Today · '+l.d : l.d;
+      el.appendChild(h);lastD=l.d;
+    }
+    const d=document.createElement('div');d.className='entry'+(l.id===editId?' editing':'');
+    d.innerHTML=`<div class="d"><span class="state ${l.state}"></span>${l.t||''} · ${actMap[l.act]||'Session'}${l.loc?' · '+esc(l.loc):''} · ${map[l.state]||''}</div>
+      <div class="meta">Took food: ${l.food||'—'} · Stress poop: ${l.poop||'—'}</div>
+      ${l.trig?`<div class="meta">Triggers: ${esc(l.trig)}</div>`:''}
+      ${l.notes?`<div>${esc(l.notes)}</div>`:''}
+      <button class="editbtn">edit</button><button class="delbtn">delete</button>`;
+    d.querySelector('.editbtn').addEventListener('click',()=>{
+      editId=l.id;
+      const dEl=document.getElementById('logDate');
+      dEl.max=todayKey();
+      dEl.value=l.d||todayKey();
+      document.getElementById('logTime').value = l.t24 || legacyTo24(l.t) || '';
+      setSeg('segAct',l.act);setSeg('segState',l.state);setSeg('segFood',l.food);setSeg('segPoop',l.poop);
+      document.getElementById('logLoc').value=l.loc||'';
+      document.getElementById('logTrig').value=l.trig||'';
+      document.getElementById('logNotes').value=l.notes||'';
+      document.getElementById('saveLog').textContent='Update session';
+      document.getElementById('logFormTitle').textContent='Editing: '+(l.t||l.d);
+      document.getElementById('cancelEdit').style.display='block';
+      renderLogs();
+      document.querySelector('.logform').scrollIntoView({behavior:'smooth'});
+    });
+    d.querySelector('.delbtn').addEventListener('click',()=>{
+      if(!confirm('Delete this session?'))return;
+      state.logs=state.logs.filter(x=>x.id!==l.id);
+      if(editId===l.id)clearForm();
+      saveState();renderLogs();
+    });
+    el.appendChild(d);
+  });
+  const n=state.logs.length;
+  const days=new Set(state.logs.map(l=>l.d)).size;
+  const g=state.logs.filter(l=>l.state==='g').length,
+        a=state.logs.filter(l=>l.state==='a').length,
+        r=state.logs.filter(l=>l.state==='r').length;
+  document.getElementById('streakLine').textContent =
+    n===0?'No sessions yet — the next walk is day one.':`${n} session${n>1?'s':''} across ${days} day${days>1?'s':''} · 🟢 ${g} · 🟡 ${a} · 🔴 ${r}`;
+}
+function esc(s){const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+/* ---------------- nav ---------------- */
+document.querySelectorAll('nav button').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('nav button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    document.getElementById('tab-'+b.dataset.tab).classList.add('active');
+    window.scrollTo({top:0});
+  });
+});
+
+/* ---------------- boot ---------------- */
+document.getElementById('todayDate').textContent=fmtDate();
+document.getElementById('logDate').max=todayKey();
+document.getElementById('logDate').value=todayKey();
+document.getElementById('logTime').value=nowTime24();
+(async()=>{
+  const loaded=await loadState();
+  if(loaded){state=Object.assign(state,loaded);}
+  /* migrate any old whole-day entries to the session format */
+  (state.logs||[]).forEach((l,i)=>{if(!l.id)l.id=(Date.parse(l.d)||0)+i;});
+  sortLogs();
+  renderChecks();renderHard();renderMiles();renderLogs();
+})();
+
+/* roll the day over: covers app left open (timer) AND app reopened/refocused */
+let curDay=todayKey();
+function checkDayChange(){
+  if(todayKey()!==curDay){
+    curDay=todayKey();
+    document.getElementById('todayDate').textContent=fmtDate();
+    renderChecks();renderHard();renderLogs();
+  }
+}
+setInterval(checkDayChange,30000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)checkDayChange();});
+window.addEventListener('pageshow',checkDayChange);
+window.addEventListener('focus',checkDayChange);
+
+/* ---------------- PWA service worker ---------------- */
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(e=>console.log('SW registration skipped:',e));
+  });
+}
+</script>
+</body>
+</html>
